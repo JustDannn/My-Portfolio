@@ -4,6 +4,8 @@ import "./globals.css";
 import { CustomCursor } from "@/components/layout/CustomCursor";
 import { SmoothScroll } from "@/components/layout/SmoothScroll";
 import { Navbar } from "@/components/layout/Navbar";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,6 +44,8 @@ export default function RootLayout({
           <CustomCursor />
           <Navbar />
           {children}
+          <Analytics />
+          <SpeedInsights />
         </SmoothScroll>
       </body>
     </html>
