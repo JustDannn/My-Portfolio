@@ -12,6 +12,7 @@ import {
   type MotionValue,
 } from "motion/react";
 import { projects } from "@/data/content";
+import { useWindowSize } from "@/hooks/useWindowSize";
 
 // ─── Typewriter Text Effect ──────────────────────────────────
 function TypewriterText({
@@ -93,6 +94,7 @@ function DepthPlane({
   smoothVelocity,
   mouseX,
   mouseY,
+  isMobile,
 }: {
   project: (typeof projects)[0];
   index: number;
@@ -100,6 +102,7 @@ function DepthPlane({
   smoothVelocity: MotionValue<number>;
   mouseX: MotionValue<number>;
   mouseY: MotionValue<number>;
+  isMobile: boolean;
 }) {
   // ── Z: smooth linear depth ──
   const z = useTransform(
@@ -118,21 +121,21 @@ function DepthPlane({
     [0, 0.25, 1, 0.4, 0],
   );
 
-  // ── Mouse parallax ──
+  // ── Mouse parallax (reduced on mobile) ──
   const depthFactor = 1 - index / projects.length;
   const parallaxX = useTransform(
     mouseX,
     [-1, 1],
-    [-40 * depthFactor, 40 * depthFactor],
+    [-25 * depthFactor, 25 * depthFactor],
   );
   const parallaxY = useTransform(
     mouseY,
     [-1, 1],
-    [-25 * depthFactor, 25 * depthFactor],
+    [-15 * depthFactor, 15 * depthFactor],
   );
 
   // ── Scroll drift ──
-  const driftY = useTransform(smoothVelocity, [-0.3, 0, 0.3], [70, 0, -70]);
+  const driftY = useTransform(smoothVelocity, [-0.3, 0, 0.3], [40, 0, -40]);
 
   // ── Breath ──
   const breathTiltX = useTransform(smoothVelocity, [-0.3, 0, 0.3], [-5, 0, 5]);
@@ -185,18 +188,22 @@ function DepthPlane({
           }}
         >
           <div
-            className="flex items-center gap-10 md:gap-16"
+            className="flex items-center gap-6 md:gap-16"
             style={{
-              flexDirection: isLeft ? "row" : "row-reverse",
-              marginLeft: isLeft ? -280 : 0,
-              marginRight: isLeft ? 0 : -280,
+              flexDirection: isMobile
+                ? "column"
+                : isLeft
+                  ? "row"
+                  : "row-reverse",
+              marginLeft: isMobile ? 0 : isLeft ? -180 : 0,
+              marginRight: isMobile ? 0 : isLeft ? 0 : -180,
             }}
           >
             {/* Card */}
             <div
               className="relative shrink-0 overflow-hidden rounded-2xl shadow-2xl pointer-events-auto group"
               style={{
-                width: "clamp(300px, 38vw, 520px)",
+                width: isMobile ? "75vw" : "clamp(300px, 38vw, 520px)",
                 aspectRatio: "4/5",
               }}
               data-cursor-hover
@@ -230,10 +237,12 @@ function DepthPlane({
 
             {/* Description panel */}
             <motion.div
-              className="pointer-events-auto max-w-70 md:max-w-[320px] space-y-4"
+              className="pointer-events-auto space-y-3 md:space-y-4"
               style={{
+                width: isMobile ? "75vw" : undefined,
+                maxWidth: 320,
                 opacity: textOpacity,
-                x: textSlideX,
+                x: isMobile ? 0 : textSlideX,
               }}
             >
               <span
@@ -276,6 +285,8 @@ export function LatestWorks() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [bgColor, setBgColor] = useState(projects[0].mood.bg);
   const [activeIndex, setActiveIndex] = useState(0);
+  const { width } = useWindowSize();
+  const isMobile = width > 0 && width < 768;
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -332,7 +343,7 @@ export function LatestWorks() {
       <div
         className="sticky top-0 h-screen overflow-hidden"
         style={{
-          perspective: 1200,
+          perspective: isMobile ? 800 : 1200,
           backgroundColor: bgColor,
           transition: "background-color 0.15s ease",
         }}
@@ -340,14 +351,14 @@ export function LatestWorks() {
       >
         {/* Accent blobs */}
         <motion.div
-          className="pointer-events-none absolute -top-1/4 -right-1/4 h-[80vh] w-[80vh] rounded-full blur-[120px]"
+          className="pointer-events-none absolute -top-1/4 -right-1/4 h-[60vh] w-[60vh] md:h-[80vh] md:w-[80vh] rounded-full blur-[80px] md:blur-[120px]"
           style={{
             backgroundColor: projects[activeIndex].mood.accent1,
             opacity: accentOpacity,
           }}
         />
         <motion.div
-          className="pointer-events-none absolute -bottom-1/4 -left-1/4 h-[70vh] w-[70vh] rounded-full blur-[100px]"
+          className="pointer-events-none absolute -bottom-1/4 -left-1/4 h-[50vh] w-[50vh] md:h-[70vh] md:w-[70vh] rounded-full blur-[70px] md:blur-[100px]"
           style={{
             backgroundColor: projects[activeIndex].mood.accent2,
             opacity: accentOpacity,
@@ -367,12 +378,13 @@ export function LatestWorks() {
               smoothVelocity={smoothVelocity}
               mouseX={mouseX}
               mouseY={mouseY}
+              isMobile={isMobile}
             />
           ))}
         </div>
 
         {/* Progress dots */}
-        <div className="absolute right-8 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-3 md:right-12">
+        <div className="absolute right-4 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-2.5 md:right-12 md:gap-3">
           {projects.map((_, i) => (
             <div
               key={i}
